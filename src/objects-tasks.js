@@ -175,8 +175,27 @@ function makeWord(lettersObject) {
  *    sellTickets([25, 25, 50]) => true
  *    sellTickets([25, 100]) => false (The seller does not have enough money to give change.)
  */
-function sellTickets(/* queue */) {
-  throw new Error('Not implemented');
+function sellTickets(queue) {
+  let bill25 = 0;
+  let bill50 = 0;
+  queue.forEach((bill) => {
+    if (bill === 25) {
+      bill25 += 1;
+    }
+    if (bill === 50) {
+      bill25 -= 1;
+      bill50 += 1;
+    }
+    if (bill === 100) {
+      if (bill50 > 0) {
+        bill25 -= 1;
+        bill50 -= 1;
+      } else {
+        bill25 -= 3;
+      }
+    }
+  });
+  return bill25 >= 0 && bill50 >= 0;
 }
 
 /**
@@ -192,9 +211,14 @@ function sellTickets(/* queue */) {
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  this.width = width;
+  this.height = height;
 }
+
+Rectangle.prototype.getArea = function calculateArea() {
+  return this.width * this.height;
+};
 
 /**
  * Returns the JSON representation of specified object
@@ -206,8 +230,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 /**
@@ -221,8 +245,10 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const parsedObject = JSON.parse(json);
+  Object.setPrototypeOf(parsedObject, proto);
+  return parsedObject;
 }
 
 /**
@@ -251,8 +277,15 @@ function fromJSON(/* proto, json */) {
  *      { country: 'Russia',  city: 'Saint Petersburg' }
  *    ]
  */
-function sortCitiesArray(/* arr */) {
-  throw new Error('Not implemented');
+function sortCitiesArray(arr) {
+  return arr.sort((a, b) => {
+    // First, sort by country name
+    if (a.country !== b.country) {
+      return a.country.localeCompare(b.country);
+    }
+    // If countries are equal, sort by city name
+    return a.city.localeCompare(b.city);
+  });
 }
 
 /**
@@ -285,8 +318,20 @@ function sortCitiesArray(/* arr */) {
  *    "Poland" => ["Lodz"]
  *   }
  */
-function group(/* array, keySelector, valueSelector */) {
-  throw new Error('Not implemented');
+function group(array, keySelector, valueSelector) {
+  const resultMap = new Map();
+
+  array.forEach((item) => {
+    const key = keySelector(item);
+    const value = valueSelector(item);
+
+    if (!resultMap.has(key)) {
+      resultMap.set(key, []);
+    }
+    resultMap.get(key).push(value);
+  });
+
+  return resultMap;
 }
 
 /**
@@ -344,32 +389,98 @@ function group(/* array, keySelector, valueSelector */) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    const selector = {
+      value,
+      stringify() {
+        return this.value;
+      },
+      id(idValue) {
+        return {
+          ...this,
+          value: `${this.value}#${idValue}`,
+          id: undefined, // Prevent further id() calls
+        };
+      },
+      class(classValue) {
+        return {
+          ...this,
+          value: `${this.value}.${classValue}`,
+          class: undefined, // Prevent further class() calls
+        };
+      },
+      attr(attrValue) {
+        return {
+          ...this,
+          value: `${this.value}[${attrValue}]`,
+          attr: undefined, // Prevent further attr() calls
+        };
+      },
+      pseudoClass(pseudoClassValue) {
+        return {
+          ...this,
+          value: `${this.value}:${pseudoClassValue}`,
+          pseudoClass: undefined, // Prevent further pseudoClass() calls
+        };
+      },
+      pseudoElement(pseudoElementValue) {
+        return {
+          ...this,
+          value: `${this.value}::${pseudoElementValue}`,
+          pseudoElement: undefined, // Prevent further pseudoElement() calls
+        };
+      },
+    };
+
+    return selector;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(idValue) {
+    return {
+      stringify() {
+        return `#${idValue}`;
+      },
+    };
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(classValue) {
+    return {
+      stringify() {
+        return `.${classValue}`;
+      },
+    };
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(attrValue) {
+    return {
+      stringify() {
+        return `[${attrValue}]`;
+      },
+    };
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(pseudoClassValue) {
+    return {
+      stringify() {
+        return `:${pseudoClassValue}`;
+      },
+    };
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(pseudoElementValue) {
+    return {
+      stringify() {
+        return `::${pseudoElementValue}`;
+      },
+    };
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return {
+      stringify() {
+        return `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+      },
+    };
   },
 };
 
